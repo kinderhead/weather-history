@@ -1,16 +1,33 @@
-import csv
-import os
-import datetime
 import calendar
+import csv
+import datetime
 import json
+import os
+from tqdm import tqdm
 
 DATE = 1
 DEW_POINT = 43
 TEMPERATURE = 44
 PRECIPITATION = 45
+HUMIDITY = 49
+PRESSURE = 52
+VISIBILITY = 53
+GUST = 56
+WIND = 57
 
 files = ["3227583", "3227588", "3227607", "3227591", "3227596", "3227600", "3227601", "3227602", "3227607"]
 data = {}
+
+def get_num(date : str, field : str, num : float | str):
+    if type(num) is str:
+        num = num.removesuffix("s")
+        num = num.removesuffix("V")
+        if num.strip() in ["", "T"]: return
+        try:
+            return float(num.strip())
+        except ValueError as e:
+            print(f"{date}: Skipping number {num} in {field}")
+            return None
 
 def get_date(date : datetime.datetime) -> str:
     month = calendar.month_abbr[date.month];
@@ -25,37 +42,35 @@ def create_entry(date : str):
     add_entry_data(date, "dew_point")
     add_entry_data(date, "temperature")
     add_entry_data(date, "precipitation")
+    add_entry_data(date, "humidity")
+    add_entry_data(date, "pressure")
+    add_entry_data(date, "visibility")
+    add_entry_data(date, "gust")
+    add_entry_data(date, "wind")
 
 def add_to_average(date : str, field : str, num : float | str):
-    if type(num) is str:
-        if num.strip() == "": return
-        try:
-            num = float(num.strip())
-        except ValueError as e:
-            print(e, "Skipping number")
-            return
+    check = get_num(date, field, num)
+    if (check is None): return
+    num = check
     total = data[date][field] * data[date][field + "_count"]
     total += num
     data[date][field + "_count"] += 1
     data[date][field] = total / data[date][field + "_count"]
 
 def add_to(date : str, field : str, num : float | str):
-    if type(num) is str:
-        num = num.removesuffix("s")
-        if num.strip() in ["", "T"]: return
-        try:
-            num = float(num.strip())
-        except ValueError as e:
-            print(e, "Skipping number")
-            return
+    check = get_num(date, field, num)
+    if (check is None): return
+    num = check
     data[date][field] += num
 
 for i in files:
     with open("data/" + i + ".csv", "r") as f:
-        print("Loading: " + f.name)
         reader = csv.reader(f)
         first = True
-        for row in reader:
+        raw = []
+        for i in reader:
+            raw.append(i)
+        for row in tqdm(raw, desc=f.name):
             if first:
                 first = False
                 continue
@@ -65,4 +80,14 @@ for i in files:
             add_to_average(str_date, "dew_point", row[DEW_POINT])
             add_to_average(str_date, "temperature", row[TEMPERATURE])
             add_to(str_date, "precipitation", row[PRECIPITATION])
-print(data)
+            add_to_average(str_date, "humidity", row[HUMIDITY])
+            add_to_average(str_date, "pressure", row[PRESSURE])
+            add_to_average(str_date, "visibility", row[VISIBILITY])
+            add_to_average(str_date, "gust", row[GUST])
+            add_to_average(str_date, "wind", row[WIND])
+
+for i in tqdm(data.keys(), desc="Processing data"):
+    data[i]["pressure"] *= 33.8639
+
+with open("public/data.json", "w") as f:
+    json.dump(data, f)
