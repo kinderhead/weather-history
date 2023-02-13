@@ -14,8 +14,8 @@ import Dropdown, { toTitleCase } from '@/lib/dropdown';
 const raw_data : any = _raw_data;
 const size = Object.keys(raw_data).length;
 const years = ['1948', '1950', '1952', '1954', '1956', '1958', '1960', '1962', '1964', '1966', '1968', '1970', '1972', '1974', '1976', '1978', '1980', '1982', '1984', '1986', '1988', '1990', '1992', '1994', '1996', '1998', '2000', '2002', '2004', '2006', '2008', '2010', '2012', '2014', '2016', '2018', '2020', '2022'];
-const colors = ["#FFAA00", "#AA00AA", "#00AAFF"];
-const choices = [["temperature", "dew_point", "humidity"], ["gust", "wind"], ["precipitation", "visibility"], ["pressure"]];
+const colors = ["#FFAA00", "#AA00AA", "#00AAFF", "#00AA00", "#AAFFAA"];
+const choices = [["temperature", "dew_point", "humidity", "high", "low"], ["gust", "wind"], ["precipitation", "visibility"], ["pressure"]];
 
 const inter = Inter({ subsets: ['latin'] })
 

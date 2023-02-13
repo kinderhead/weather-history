@@ -48,6 +48,9 @@ def create_entry(date : str):
     add_entry_data(date, "gust")
     add_entry_data(date, "wind")
 
+    add_entry_data(date, "low")
+    add_entry_data(date, "high")
+
 def add_to_average(date : str, field : str, num : float | str):
     check = get_num(date, field, num)
     if (check is None): return
@@ -59,9 +62,24 @@ def add_to_average(date : str, field : str, num : float | str):
 
 def add_to(date : str, field : str, num : float | str):
     check = get_num(date, field, num)
-    if (check is None): return
+    if check is None: return
     num = check
     data[date][field] += num
+
+def add_min(date : str, field : str, num : float | str):
+    check = get_num(date, field, num)
+    if check is None: return
+    num = check
+    if data[date][field] == 0:
+        data[date][field] = num
+    else:
+        data[date][field] = min(num, data[date][field])
+
+def add_max(date : str, field : str, num : float | str):
+    check = get_num(date, field, num)
+    if check is None: return
+    num = check
+    data[date][field] = max(num, data[date][field])
 
 for i in files:
     with open("data/" + i + ".csv", "r") as f:
@@ -85,6 +103,8 @@ for i in files:
             add_to_average(str_date, "visibility", row[VISIBILITY])
             add_to_average(str_date, "gust", row[GUST])
             add_to_average(str_date, "wind", row[WIND])
+            add_min(str_date, "low", row[TEMPERATURE])
+            add_max(str_date, "high", row[TEMPERATURE])
 
 for i in tqdm(data.keys(), desc="Processing data"):
     data[i]["pressure"] *= 33.8639
