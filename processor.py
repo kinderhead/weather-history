@@ -28,6 +28,8 @@ def get_num(date : str, field : str, num : float | str):
         except ValueError as e:
             print(f"{date}: Skipping number {num} in {field}")
             return None
+    else:
+        return num
 
 def get_date(date : datetime.datetime) -> str:
     month = calendar.month_abbr[date.month];
@@ -50,6 +52,8 @@ def create_entry(date : str):
 
     add_entry_data(date, "low")
     add_entry_data(date, "high")
+    add_entry_data(date, "wind_chill")
+    add_entry_data(date, "wind_chill_low")
 
 def add_to_average(date : str, field : str, num : float | str):
     check = get_num(date, field, num)
@@ -81,6 +85,11 @@ def add_max(date : str, field : str, num : float | str):
     num = check
     data[date][field] = max(num, data[date][field])
 
+def calc_wind_chill(temp : float, wind : float):
+    if temp is None or wind is None:
+        return None
+    return 0.0817 * (3.71*(wind**0.5) + 5.81 - (0.25*wind)) * (temp - 91.4) + 91.4
+
 for i in files:
     with open("data/" + i + ".csv", "r") as f:
         reader = csv.reader(f)
@@ -105,6 +114,11 @@ for i in files:
             add_to_average(str_date, "wind", row[WIND])
             add_min(str_date, "low", row[TEMPERATURE])
             add_max(str_date, "high", row[TEMPERATURE])
+
+            wind_chill = calc_wind_chill(get_num(str_date, "temperature", row[TEMPERATURE]), get_num(str_date, "wind", row[WIND]))
+            if wind_chill is not None:
+                add_to_average(str_date, "wind_chill", wind_chill)
+                add_min(str_date, "wind_chill_low", wind_chill)
 
 for i in tqdm(data.keys(), desc="Processing data"):
     data[i]["pressure"] *= 33.8639
