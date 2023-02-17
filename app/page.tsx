@@ -1,5 +1,4 @@
 'use client';
-
 import Image from 'next/image'
 import { Inter } from '@next/font/google'
 import styles from './page.module.css'
@@ -17,21 +16,12 @@ const years = ['1948', '1950', '1952', '1954', '1956', '1958', '1960', '1962', '
 const colors = ["#FFAA00", "#AA00AA", "#33FF33", "#FF3333", "#00AAFF"];
 const choices = [["temperature", "dew_point", "humidity", "high", "low"], ["gust", "wind", "wind_chill_low", "wind_chill"], ["precipitation", "visibility"], ["pressure"]];
 
+const descriptions : {[name: string] : string} = {"temperature": "The temperature in F based on the temperature of a dry bulb.", "dew_point": "The temperature at which water condensates out of the air.", "humidity": "The percentage of water in the air compared to the max possible water content in the air.", "high": "The highest temperature in the month.", "low": "The lowest temperature in the month.", "gust": "Wind gust speed in miles per hour. Not recorded until 1973.", "wind": "Regular wind speed in miles per hour.", "wind_chill_low": "Lowest wind chill in F.", "wind_chill": "Wind chill in F.", "precipitation": "Total amount of precipitation for that month in inches.", "visibility": "Total visibility in miles. Changed recording method in 1998.", "pressure": "Pressure of the air unadjusted for altitude in millibars."};
+
 const inter = Inter({ subsets: ['latin'] })
 
 function getDataset(i : string, idex : number, minVal : number, maxVal : number) : ChartDataset<"line", any> {
     return {label: toTitleCase(i), data: Object.keys(raw_data).map(e => raw_data[e][i]).slice(minVal, maxVal), backgroundColor: colors[idex], borderColor: colors[idex]};
-}
-
-function rebuildData(choice : string[], minVal : number, maxVal : number) {
-    var _data : ChartDataset<"line", any>[] = [];
-    var idex = 0;
-    choice.forEach(i => {
-        _data.push(getDataset(i, idex, minVal, maxVal));
-        idex++;
-    });
-
-    return _data;
 }
 
 export default function Home() {
@@ -47,12 +37,18 @@ export default function Home() {
     const [choice, setChoice] = useState<string[]>(choices[0]);
     const [minVal, setMinVal] = useState<number>(0);
     const [maxVal, setMaxVal] = useState<number>(size);
-    const [data, setData] = useState<ChartDataset<"line", any>[]>(rebuildData(choice, minVal, maxVal));
+
+    var data : ChartDataset<"line", any>[] = [];
+    var idex = 0;
+    choice.forEach(i => {
+        data.push(getDataset(i, idex, minVal, maxVal));
+        idex++;
+    });
 
     return (
         <main className={inter.className} style={{height: "100%", width: "100%"}}>
             <div>
-                <div style={{paddingLeft: 5}}>All displayed values are averages for the month. Choose variables to view:</div>
+                <div style={{paddingLeft: 5}}>All displayed values are averages for the month. Click variables in the graph label to hide it. Choose variables to view:</div>
                 <Dropdown options={["Temperature, dew point, and humidity", "Wind", "Precipitation and visibility", "Pressure"]} onClick={opt => {
                     console.log(opt);
                     var c : string[] = [];
@@ -66,24 +62,17 @@ export default function Home() {
                         c = choices[3];
                     }
                     setChoice(c);
-                    setData(rebuildData(c, minVal, maxVal));
                 }}/>
                 <ul style={{display: "inline"}}>
                     {
                         choice.map(i => {
                             return (<li key={i} style={{float: "left", display: "inline", paddingLeft: "5px"}}>
-                                <input type="checkbox" id={i} defaultChecked={true} onClick={(input) => {
-                                    const element = input.target as HTMLInputElement;
-                                    var idex = choice.findIndex(e => i == e);
-                                    data[idex].hidden = element.checked;
-                                    console.log("Toggled " + i);
-                                    setData(data);
-                                }}></input>
-                                <label style={{paddingLeft: "5px", paddingRight: "10px"}} htmlFor={i}>{i}</label>
+                                <a style={{paddingLeft: "5px", paddingRight: "10px"}}>{toTitleCase(i) + ": " + descriptions[i]}</a>
                             </li>);
                         })
                     }
                 </ul>
+                <br/>
                 <br/>
                 <MultiRangeSlider labels={years} min={0} max={size} step={1} onChange={e => {
                     setMinVal(e.minValue);
