@@ -48,7 +48,7 @@ export default function Home() {
     return (
         <main className={inter.className} style={{height: "100%", width: "100%"}}>
             <div>
-                <div style={{paddingLeft: 5}}>All displayed values are averages for the month. Click variables in the graph label to hide it. Choose variables to view:</div>
+                <div style={{paddingLeft: 5}}>All displayed values are averages for the month. Click variables in the graph label to hide it. You may need to zoom out to see everything. Choose variables to view:</div>
                 <Dropdown options={["Temperature, dew point, and humidity", "Wind", "Precipitation and visibility", "Pressure"]} onClick={opt => {
                     console.log(opt);
                     var c : string[] = [];
@@ -72,6 +72,7 @@ export default function Home() {
                         })
                     }
                 </ul>
+                <br/>
                 <br/>
                 <br/>
                 <MultiRangeSlider labels={years} min={0} max={size} step={1} onChange={e => {
